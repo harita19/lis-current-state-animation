@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Proactive LIS Benefit Assurance: from manual gaps to a verified fix</title>
+<style>
+  :root{--ink:#1b2a3a;--mute:#5b6b7c;--line:#d8e0e8;--bg:#f4f7fa;--card:#fff;--blue:#0176d3;--red:#c23934;--amber:#dd7a01;--green:#2e844a;--navy:#032d60}
+  *{box-sizing:border-box} html{scroll-behavior:smooth;scroll-padding-top:56px}
+  body{margin:0;font:15px/1.45 -apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;color:var(--ink);background:var(--bg)}
+  header{background:var(--navy);color:#fff;padding:20px 32px}
+  header h1{margin:0 0 4px;font-size:22px;font-weight:600} header p{margin:0;color:#b9c9de;font-size:13px;max-width:1000px}
+  nav{position:sticky;top:0;z-index:10;background:#fff;border-bottom:1px solid var(--line);display:flex;gap:4px;padding:6px 24px;overflow-x:auto}
+  nav a{white-space:nowrap;text-decoration:none;color:var(--mute);font-size:13px;padding:6px 12px;border-radius:6px}
+  nav a b{color:var(--blue);margin-right:4px} nav a:hover{background:#eef4fb;color:var(--navy)}
+  main{max-width:1180px;margin:0 auto;padding:8px 32px 70px}
+  section{padding-top:28px}
+  .scene{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--blue);font-weight:600}
+  h2{font-size:21px;margin:2px 0 4px} h3{font-size:15px;margin:0 0 4px}
+  .sub{margin:0 0 14px;color:var(--mute);font-size:13px;max-width:900px}
+  .note{font-size:12px;color:var(--mute)}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px}
+  .kpis{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin:14px 0}
+  .kpi{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px 16px}
+  .kpi b{display:block;font-size:28px;line-height:1.1;font-weight:600} .kpi span{font-size:12px;color:var(--mute)}
+  .kpi.bad b{color:var(--red)} .kpi.good b{color:var(--green)}
+  button{font:inherit;border:1px solid var(--blue);background:var(--blue);color:#fff;border-radius:6px;padding:7px 14px;cursor:pointer}
+  button.ghost{background:#fff;color:var(--blue)} button:disabled{opacity:.5;cursor:default}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px} .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+  .how{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:12px 0}
+  .how div{background:#fff;border:1px solid var(--line);border-left:4px solid var(--blue);border-radius:8px;padding:10px 12px;font-size:13px}
+  .how b{display:block;margin-bottom:2px}
+  /* swimlane */
+  .lanes{position:relative;margin-top:10px}
+  .lane{display:grid;grid-template-columns:130px 1fr;border-top:1px solid var(--line);min-height:96px}
+  .lane:first-child{border-top:0} .lane .name{font-size:12px;font-weight:600;color:var(--mute);padding:10px 8px 0 0}
+  .lane .track{position:relative}
+  .step{position:absolute;top:8px;width:132px;background:#fff;border:1.5px solid #9db3c8;border-radius:8px;padding:6px 8px;font-size:12px;line-height:1.25;transition:.25s;opacity:.55}
+  .step small{display:block;color:var(--mute);font-size:11px;margin-top:2px}
+  .step.hot{border-color:var(--red);background:#fdeceb} .step.good{border-color:var(--green);background:#eaf6ee}
+  .step.done{opacity:1}
+  .step.active{opacity:1;background:var(--blue);border-color:var(--navy);color:#fff;box-shadow:0 0 0 4px rgba(1,118,211,.30),0 6px 16px rgba(1,118,211,.35);transform:scale(1.06);z-index:2}
+  .step.active small{color:#dcebfa}
+  .tag{display:inline-block;font-size:10px;background:#eef3f8;border-radius:3px;padding:0 5px;margin-top:3px;color:var(--mute)}
+  .tag.red{background:#fbd9d7;color:var(--red)} .tag.green{background:#cdebd6;color:var(--green)}
+  .step.active .tag,.step.active .tag.red,.step.active .tag.green{background:rgba(255,255,255,.22);color:#fff}
+  .bar{display:flex;height:34px;border-radius:6px;overflow:hidden;margin:8px 0 6px}
+  .bar div{display:flex;align-items:center;justify-content:center;color:#fff;font-size:12px;white-space:nowrap}
+  .legend{display:flex;gap:16px;flex-wrap:wrap;font-size:12px;color:var(--mute)} .legend i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:5px}
+  .tl{position:relative;height:96px;margin:10px 0 0;min-width:560px}
+  .tl .axis{position:absolute;left:0;right:0;top:46px;height:2px;background:#9db3c8}
+  .tl .mark{position:absolute;top:0;transform:translateX(-50%);text-align:center;font-size:11px;width:150px}
+  .tl .mark i{display:block;margin:0 auto 4px;width:12px;height:12px;border-radius:50%;background:var(--blue)}
+  .tl .mark.low{top:54px} .tl .range{position:absolute;top:42px;height:10px;border-radius:5px}
+  table{border-collapse:collapse;width:100%;font-size:13px} th,td{text-align:left;padding:8px 10px;border-top:1px solid var(--line);vertical-align:top} th{font-size:12px;color:var(--mute);border-top:0}
+  .gap{font-weight:600} .win{color:var(--green);font-weight:600} .loss{color:var(--red);font-weight:600}
+  .chip{display:inline-block;font-size:11px;font-weight:600;border-radius:10px;padding:1px 8px;margin:1px 3px 1px 0;color:#fff}
+  .c-d360{background:#0176d3}.c-ag{background:#5a1ba9}.c-mule{background:#1b96ff;color:#032d60}.c-mc{background:#e07b00}.c-sc{background:#2e844a}.c-tab{background:#a0368c}.c-app{background:#444}
+  .gapcard{border:1px solid var(--line);border-radius:10px;background:#fff;padding:12px 14px}
+  .gapcard .n{float:right;font-size:11px;color:var(--mute)}
+  .arch{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;align-items:stretch;margin-top:8px}
+  .box{background:#fff;border:1.5px solid #9db3c8;border-radius:8px;padding:8px;font-size:12px}
+  .box b{display:block;font-size:12px;margin-bottom:2px}.box.h{border-color:var(--blue);background:#eef6fd}
+  .arr{display:none}
+  details{margin-top:20px} summary{cursor:pointer;font-weight:600}
+  .counter{font-variant-numeric:tabular-nums}
+  @media(max-width:980px){.kpis{grid-template-columns:repeat(2,1fr)}.grid2,.grid3,.how{grid-template-columns:1fr}.arch{grid-template-columns:repeat(2,1fr)}}
+</style>
+</head>
+<body>
+<header>
+  <h1>Proactive LIS Benefit Assurance: from manual gaps to a verified fix</h1>
+  <p>Opening story for the demo. We start with a process analysis in Agentforce Operations (the Regrello technology) of how LIS discrepancies are handled today, show the gaps it surfaces, then show how Data 360, Agentforce, MuleSoft and a human approval close them. This page simulates the analysis from synthetic data: it is not a screen from the product, and all numbers are synthetic.</p>
+</header>
+<nav>
+  <a href="#s1"><b>1</b>Discover</a><a href="#s2"><b>2</b>Gaps</a><a href="#s3"><b>3</b>The fix</a><a href="#s4"><b>4</b>After</a><a href="#s5"><b>5</b>Before vs after</a><a href="#s6"><b>6</b>Run of show</a>
+</nav>
+<main>
+
+<!-- ============ SCENE 1: DISCOVER ============ -->
+<section id="s1">
+  <div class="scene">Scene 1 &middot; Discover (as-is)</div>
+  <h2>How an LIS discrepancy is handled today</h2>
+  <p class="sub">Agentforce Operations models work as a workflow and measures each step. Here it is replayed on 12 months of case data from a 5-million-member plan: 20% Medicare, 80% Medicaid, 15% dual.</p>
+
+  <div class="how">
+    <div><b>1. Map the work as people do it</b>8 steps across 5 teams, run on spreadsheets, email and team queues.</div>
+    <div><b>2. Measure every step</b>Wait time, hand-offs, rework and outcome for each case, not averages by team.</div>
+    <div><b>3. Rank gaps by member impact</b>The test: was the level fixed before the effective date (the member's first affected fill)?</div>
+  </div>
+
+  <div class="card" style="margin-bottom:12px">
+    <b>Plan population</b>
+    <div style="display:flex;gap:18px;flex-wrap:wrap;margin-top:8px;align-items:end">
+      <label class="note">Total plan members<br><input id="in-total" type="number" value="5000000" step="100000" style="width:130px;padding:5px;font:inherit"></label>
+      <label class="note">Medicare %<br><input id="in-medicare" type="number" value="20" step="1" min="0" max="100" style="width:64px;padding:5px;font:inherit"></label>
+      <label class="note">Medicaid %<br><input id="in-medicaid" type="number" value="80" step="1" min="0" max="100" style="width:64px;padding:5px;font:inherit"></label>
+      <label class="note">Dual (in both) %<br><input id="in-dual" type="number" value="15" step="1" min="0" max="100" style="width:64px;padding:5px;font:inherit"></label>
+      <label class="note">Duals with LIS % (assumption)<br><input id="in-dual-lis" type="number" value="100" step="5" min="0" max="100" style="width:64px;padding:5px;font:inherit"></label>
+      <label class="note">Medicare-only with LIS % (assumption)<br><input id="in-med-lis" type="number" value="25" step="5" min="0" max="100" style="width:64px;padding:5px;font:inherit"></label>
+    </div>
+    <div class="bar" id="popbar" style="margin-top:12px"></div>
+    <div class="legend" id="poplegend"></div>
+    <p class="note" style="margin:8px 0 0">Shares are of total members. Duals count in both Medicare and Medicaid, so Medicare-only = Medicare minus duals. Only Part D members can receive LIS, so Medicaid-only members are out of scope: <b id="out-lis" class="counter"></b> LIS members in scope. <span id="out-warn" style="color:#c23934"></span> Rates below come from the synthetic baseline (15,008 manual cases at this scale, Nov 2025 to Jan 2026) and do not change with these inputs.</p>
+  </div>
+
+  <div class="kpis">
+    <div class="kpi"><b class="counter" id="k-cases"></b><span>LIS discrepancies per month, handled by hand</span></div>
+    <div class="kpi bad"><b>17.1 days</b><span>median detection to fix (p90 27.5 days)</span></div>
+    <div class="kpi bad"><b class="counter" id="k-late"></b><span>members per month whose fix lands after the effective date (38.9% of fixed cases)</span></div>
+    <div class="kpi bad"><b class="counter" id="k-waste"></b><span>cases per month closed with no action (18.7%)</span></div>
+    <div class="kpi bad"><b class="counter" id="k-fte"></b><span><span id="k-hours"></span> analyst hours per month at 40 min per case</span></div>
+  </div>
+
+  <div class="card">
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
+      <div><b>Workflow run (before): one LIS mismatch, handled by hand</b><div class="note">Press play. The blue box is the current step. Red steps are where the time goes.</div></div>
+      <div><button id="play-b">Play before</button> <button id="reset-b" class="ghost">Reset</button></div>
+    </div>
+    <div style="overflow-x:auto"><div class="lanes" id="lanes-b" style="min-width:900px"></div></div>
+    <div style="display:flex;justify-content:space-between;margin-top:10px;align-items:baseline;gap:12px;flex-wrap:wrap">
+      <div class="note" id="status-b">Ready.</div>
+      <div><span class="note">Elapsed since detection:</span> <b id="clock-b" class="counter">0.0 days</b> <span class="note">of 21 days to the effective date</span></div>
+    </div>
+  </div>
+
+  <div class="grid2" style="margin-top:16px">
+    <div>
+      <h3>Where the 17 days go</h3>
+      <p class="note" style="margin:0 0 6px">Median hours per stage, 10,907 verified manual cases. Stage medians do not add exactly to the 409.3-hour end-to-end median.</p>
+      <div class="card"><div class="bar" id="bar-b"></div><div class="legend" id="legend-b"></div>
+      <p class="note" style="margin:8px 0 0">"Applied" and "verified" carry the same timestamp in the manual baseline: nobody re-reads the target system.</p></div>
+    </div>
+    <div>
+      <h3>Why it misses the date</h3>
+      <p class="note" style="margin:0 0 6px">Median 21 days left at detection; the fix takes a median 17.1 days.</p>
+      <div class="card" style="overflow-x:auto"><div class="tl" id="tl-b"></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ SCENE 2: GAPS ============ -->
+<section id="s2">
+  <div class="scene">Scene 2 &middot; Gaps and opportunity</div>
+  <h2>Six gaps the analysis surfaces</h2>
+  <p class="sub">Each gap is a measured step in the manual run, with the capability that closes it. Volumes use the plan population above.</p>
+  <div class="grid3" id="gapcards"></div>
+</section>
+
+<!-- ============ SCENE 3: FIX ============ -->
+<section id="s3">
+  <div class="scene">Scene 3 &middot; The fix</div>
+  <h2>We connected the systems, we replaced none of them</h2>
+  <p class="sub">The same eight steps, rebuilt so a rule finds the mismatch, an agent explains it, a person approves it, MuleSoft makes the change and a fresh read proves it.</p>
+  <div class="arch">
+    <div class="box"><b>CMS, health plan, PBM</b>Existing systems stay. <span class="chip c-app">source</span></div>
+    <div class="box h"><b>MuleSoft</b>Ingests CMS, fans out the change, executes approved fixes, re-reads on request. <span class="chip c-mule">gaps 4, 5</span></div>
+    <div class="box h"><b>Data 360</b>Three-way view per member, calculated insight, rules R1 to R7 flag the mismatch early. <span class="chip c-d360">gaps 1, 2</span></div>
+    <div class="box h"><b>Agentforce</b>Names the system to fix, explains it, requests the correction. Never says "fixed" before verification. <span class="chip c-ag">gaps 2, 3</span></div>
+    <div class="box h"><b>Human approval</b>A different person approves, with queue, SLA and escalation. <span class="chip c-app">gap 3</span></div>
+    <div class="box h"><b>Marketing, Service, Tableau</b>Notice A and B, status card for the agent, operations dashboard. <span class="chip c-mc">gap 6</span></div>
+  </div>
+  <p class="note" style="margin-top:10px">Guardrails: the agent recommends, a person approves, MuleSoft executes, and a correction is Verified only when a fresh re-read of the target matches CMS. Rules R5 (BAE) and R7 (stale CMS) route to manual review and never offer a correction.</p>
+</section>
+
+<!-- ============ SCENE 4: AFTER ============ -->
+<section id="s4">
+  <div class="scene">Scene 4 &middot; After</div>
+  <h2>The same case, automated and verified</h2>
+  <p class="sub">Mary: CMS lowered her cost-sharing level, the PBM still shows the old one, her first fill is 11 days away. Timings are medians from 53,196 automated, verified cases.</p>
+  <div class="card">
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
+      <div><b>Workflow run (after): detect, approve, fix, verify</b><div class="note">Press play. The blue box is the current step. Green steps are new or automated.</div></div>
+      <div><button id="play-a">Play after</button> <button id="reset-a" class="ghost">Reset</button></div>
+    </div>
+    <div style="overflow-x:auto"><div class="lanes" id="lanes-a" style="min-width:900px"></div></div>
+    <div style="display:flex;justify-content:space-between;margin-top:10px;align-items:baseline;gap:12px;flex-wrap:wrap">
+      <div class="note" id="status-a">Ready.</div>
+      <div><span class="note">Elapsed since detection:</span> <b id="clock-a" class="counter">0.0 hours</b> <span class="note">with 36 days to the effective date (median)</span></div>
+    </div>
+  </div>
+  <div class="grid2" style="margin-top:16px">
+    <div>
+      <h3>Where the 25 hours go</h3>
+      <p class="note" style="margin:0 0 6px">Median hours per stage, 53,196 automated cases. The longest stage is the human approval, and that is by design.</p>
+      <div class="card"><div class="bar" id="bar-a"></div><div class="legend" id="legend-a"></div>
+      <p class="note" style="margin:8px 0 0">91.9% of approvals land within the 24-hour SLA. A fresh re-read follows every fix (median 31 minutes).</p></div>
+    </div>
+    <div>
+      <h3>Margin to the effective date</h3>
+      <p class="note" style="margin:0 0 6px">Detected with 36 days left; fixed on day 1.</p>
+      <div class="card" style="overflow-x:auto"><div class="tl" id="tl-a"></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ SCENE 5: BEFORE VS AFTER ============ -->
+<section id="s5">
+  <div class="scene">Scene 5 &middot; Before and after</div>
+  <h2>The result for members and for operations</h2>
+  <div class="grid2">
+    <div class="card">
+      <table>
+        <tr><th>Measure</th><th>Manual (before)</th><th>Automated (after)</th></tr>
+        <tr><td>Median days left at detection</td><td class="loss">21 days</td><td class="win">36 days</td></tr>
+        <tr><td>Median detection to verified fix</td><td class="loss">17.1 days</td><td class="win">25.1 hours</td></tr>
+        <tr><td>Fixed before the effective date</td><td class="loss">61.1%</td><td class="win">95.8%</td></tr>
+        <tr><td>Median days late when missed</td><td class="loss">8 days</td><td class="win">2 days</td></tr>
+        <tr><td>Cases closed with no action</td><td class="loss">18.7%</td><td class="win">4.5%</td></tr>
+        <tr><td>Fix re-read and verified</td><td class="loss">No</td><td class="win">Every fix</td></tr>
+        <tr><td>Member told after a verified fix (Notice B)</td><td class="loss">Not in the process</td><td class="win">Every PBM fix</td></tr>
+        <tr><td>Analyst time per case</td><td class="loss">40 min</td><td class="win">6 min</td></tr>
+      </table>
+      <p class="note" style="margin:8px 0 0">Automated figures are verified automated cases after go-live (Jan 5, 2026). Analyst minutes, the no-notice baseline and the $55 hourly cost are modelling assumptions.</p>
+    </div>
+    <div class="card">
+      <b>Per month at this plan's scale</b>
+      <table>
+        <tr><th>Measure</th><th>Manual</th><th>Automated</th></tr>
+        <tr><td>Members hit after the effective date</td><td class="loss" id="o-late-m"></td><td class="win" id="o-late-a"></td></tr>
+        <tr><td>Cases closed with no action</td><td class="loss" id="o-na-m"></td><td class="win" id="o-na-a"></td></tr>
+        <tr><td>Analyst hours</td><td class="loss" id="o-h-m"></td><td class="win" id="o-h-a"></td></tr>
+        <tr><td>Analyst cost ($55/h)</td><td class="loss" id="o-c-m"></td><td class="win" id="o-c-a"></td></tr>
+      </table>
+      <p style="margin:12px 0 0"><b>The line:</b> "Before, it took us more than two weeks to fix a wrong LIS level, and four in ten were fixed after the member's first fill. Nobody checked the fix worked. Now a rule finds it with five weeks to spare, a person approves it in a day, and the system proves it."</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ SCENE 6: RUN OF SHOW ============ -->
+<section id="s6">
+  <div class="scene">Scene 6 &middot; Run of show</div>
+  <h2>Where this fits in the live demo</h2>
+  <p class="sub">The process story takes the front of the blueprint's 15-minute run. Either extend the demo to about 18 minutes or trim two later screens.</p>
+  <div class="card">
+    <table>
+      <tr><th>Time</th><th>Screen</th><th>What you show</th></tr>
+      <tr><td>0:00 to 3:00</td><td>This page, scenes 1 to 3</td><td>Press Play before, stop on the red steps and the 17.1-day tile, show the gap cards, then the fix on one slide-like architecture row.</td></tr>
+      <tr><td>3:00 to 4:30</td><td>This page, scenes 4 and 5</td><td>Press Play after, then the before-and-after table. Say it is a simulation; the next screens are live.</td></tr>
+      <tr><td>4:30 to 6:30</td><td>Data 360</td><td>Three-way view, filter to exceptions, open Mary, point out Linda and Robert.</td></tr>
+      <tr><td>6:30 to 10:30</td><td>Agentforce, approval, MuleSoft</td><td>Ask the ops prompt, request the fix, approve as a second person, show the MuleSoft call, refresh until Verified.</td></tr>
+      <tr><td>10:30 to 11:30</td><td>Molina branch (Linda)</td><td>Same flow, our own system is the target.</td></tr>
+      <tr><td>11:30 to 13:00</td><td>Marketing Cloud Next</td><td>Notice A and Notice B with delivery status.</td></tr>
+      <tr><td>13:00 to 15:30</td><td>Service Cloud</td><td>Mary's case, status card, service question to Agentforce.</td></tr>
+      <tr><td>15:30 to 17:30</td><td>Tableau Next</td><td>Tiles, feed-cycle chart, three business metrics. Return to scene 5.</td></tr>
+    </table>
+  </div>
+  <details>
+    <summary>Notes and caveats</summary>
+    <ul>
+      <li>Agentforce Operations is described here in general terms (workflow modelling, step measurement). Replace the swimlane with your tenant's process view if you have one, and keep the same eight steps and numbers.</li>
+      <li>The history is synthetic: manual baseline Nov 2025 to Jan 2026, automated from Jan 5, 2026. Re-run <code>node tools/gen_history_csv.js</code> to change the population or assumptions, then update the numbers on this page.</li>
+      <li>Retry and notice behaviour in the history is modelled, not observed. Say "in our model" if asked.</li>
+    </ul>
+  </details>
+</section>
+
+</main>
+
+<script>
+// ================= DATA (synthetic; data360/LIS_History_Discrepancy.csv) =================
+const BEFORE = {
+  stages: [
+    { label: 'Detection to correction request', hours: 72.4,  color: '#dd7a01' },
+    { label: 'Waiting for approval',            hours: 59.3,  color: '#c23934' },
+    { label: 'Approval to fix applied',         hours: 276.5, color: '#8e1f1b' }
+  ],
+  daysLeft: 21, medianDaysToFix: 17.1, lateMedianDays: 8, lateShare: '38.9%'
+};
+const AFTER = {
+  stages: [
+    { label: 'Detection to request (rules, agent)', hours: 2.1,  color: '#5a1ba9' },
+    { label: 'Human approval',                      hours: 20.4, color: '#0176d3' },
+    { label: 'Submit and apply (MuleSoft)',         hours: 1.1,  color: '#2e844a' },
+    { label: 'Fresh re-read (verify)',              hours: 0.5,  color: '#1b6b3a' }
+  ],
+  daysLeft: 36
+};
+const RATE = { discPerMonth: 0.008, manualVerifiedShare: 12196/15008, manualLate: 4748/12196, manualNoAction: 2812/15008,
+               autoVerifiedShare: 59713/62541, autoLate: 2528/59713, autoNoAction: 2828/62541,
+               minManual: 40, minAuto: 6, costPerHour: 55, hoursPerFte: 160 };
+const fmt = n => Math.round(n).toLocaleString('en-US');
+
+// ================= swimlane engine =================
+function lane(containerId, lanes, steps, o) {
+  const root = document.getElementById(containerId);
+  lanes.forEach((name, li) => {
+    const l = document.createElement('div'); l.className = 'lane';
+    l.innerHTML = '<div class="name">' + name + '</div><div class="track" id="' + containerId + '-t' + li + '"></div>';
+    root.appendChild(l);
+  });
+  steps.forEach(st => {
+    const el = document.createElement('div');
+    el.className = 'step ' + (st.kind || ''); el.id = containerId + '-s' + st.id; el.style.left = st.x + '%';
+    el.innerHTML = st.t + '<small>' + st.s + '</small><span class="tag ' + (st.kind === 'hot' ? 'red' : st.kind === 'good' ? 'green' : '') + '">' + st.tag + '</span>';
+    document.getElementById(containerId + '-t' + st.lane).appendChild(el);
+  });
+  let timer = null, idx = -1;
+  const status = document.getElementById(o.status), clock = document.getElementById(o.clock);
+  const show = i => {
+    steps.forEach((st, j) => {
+      const el = document.getElementById(containerId + '-s' + st.id);
+      el.classList.toggle('active', j === i); el.classList.toggle('done', j < i);
+    });
+    if (i >= 0) { status.textContent = 'Step ' + steps[i].id + ': ' + steps[i].note; clock.textContent = o.fmtClock(steps[i].at); clock.style.color = o.warn(steps[i].at) ? '#c23934' : ''; }
+  };
+  const stop = () => { clearInterval(timer); timer = null; document.getElementById(o.play).disabled = false; };
+  const reset = () => { stop(); idx = -1; steps.forEach(st => { const el = document.getElementById(containerId + '-s' + st.id); el.classList.remove('active', 'done'); }); status.textContent = 'Ready.'; clock.textContent = o.fmtClock(0); clock.style.color = ''; };
+  document.getElementById(o.play).onclick = () => {
+    reset(); document.getElementById(o.play).disabled = true;
+    timer = setInterval(() => { idx++; if (idx >= steps.length) { stop(); status.textContent = o.end; steps.forEach(st => document.getElementById(containerId + '-s' + st.id).classList.remove('active')); return; } show(idx); }, 1700);
+  };
+  document.getElementById(o.reset).onclick = reset;
+  reset();
+}
+
+// ---- BEFORE: 5 lanes ----
+lane('lanes-b', ['CMS feed', 'Benefits analyst', 'Approver', 'Plan / PBM ops', 'Member services'], [
+  { id: 1, lane: 0, x: 1,  t: 'CMS file arrives', s: 'Weekly or monthly', tag: 'file', at: 0, note: 'A new CMS LIS file arrives. Nothing happens until an analyst picks it up.' },
+  { id: 2, lane: 1, x: 17, t: 'Compare in spreadsheets', s: 'CMS vs plan vs PBM', tag: '40 min of analyst time', kind: 'hot', at: 24, note: 'The analyst compares three extracts by hand and finds a mismatch, with a median 21 days left.' },
+  { id: 3, lane: 1, x: 33, t: 'Triage', s: 'Real, BAE or stale CMS?', tag: '18.7% close with no action', kind: 'hot', at: 40, note: 'Some mismatches turn out to need no action. That work is lost.' },
+  { id: 4, lane: 1, x: 49, t: 'Email or ticket the fix', s: 'To plan ops or PBM', tag: '3.0 days median', kind: 'hot', at: 72, note: 'The request goes out by email. Median 3.0 days from detection to request.' },
+  { id: 5, lane: 2, x: 49, t: 'Approve by email', s: 'No SLA, no queue', tag: '2.5 days median', kind: 'hot', at: 132, note: 'Approval waits in an inbox. Median 2.5 days.' },
+  { id: 6, lane: 3, x: 65, t: 'Apply in system', s: 'Team queue', tag: '11.5 days median', kind: 'hot', at: 408, note: "The fix waits in the target team's queue. Median 11.5 days after approval." },
+  { id: 7, lane: 3, x: 81, t: 'Reply "done"', s: 'No re-read', tag: 'not verified', kind: 'hot', at: 410, note: "The case is closed on someone's word. Nobody re-reads the target system." },
+  { id: 8, lane: 4, x: 81, t: 'Member finds out', s: 'Often by calling', tag: 'reactive', at: 410, note: 'The member learns when a claim prices wrong, or when a notice goes out late.' }
+], { status: 'status-b', clock: 'clock-b', play: 'play-b', reset: 'reset-b',
+     fmtClock: h => (h / 24).toFixed(1) + ' days', warn: h => h / 24 > 15,
+     end: 'Done after about 17 days, with only 4 days of margin. 38.9% of cases finish later than this.' });
+
+// ---- AFTER: 5 lanes ----
+lane('lanes-a', ['MuleSoft', 'Data 360 + rules', 'Agentforce', 'Approver (human)', 'Member'], [
+  { id: 1, lane: 0, x: 1,  t: 'CMS file ingested', s: 'Fanned out to plan and PBM', tag: 'MuleSoft', kind: 'good', at: 0, note: 'MuleSoft ingests the CMS file and updates the plan and PBM loads. Nothing is replaced.' },
+  { id: 2, lane: 1, x: 17, t: 'Three-way compare', s: 'Rules R1 to R7, continuous', tag: 'Data 360', kind: 'good', at: 0.5, note: 'Data 360 compares CMS, plan and PBM per member. The rule finds the PBM behind CMS with a median 36 days left.' },
+  { id: 3, lane: 2, x: 33, t: 'Investigate and explain', s: 'Names the system to fix', tag: '2.1 h to request', kind: 'good', at: 2.1, note: 'Agentforce names the wrong system, explains it in plain language and requests the correction. No eligibility or copay decisions.' },
+  { id: 4, lane: 3, x: 49, t: 'Approve with SLA', s: 'Not the requester', tag: '20.4 h median, 91.9% in SLA', at: 22.5, note: 'A different person approves, with a queue, a 24-hour SLA and escalation.' },
+  { id: 5, lane: 0, x: 65, t: 'Submit and apply', s: 'Idempotent call to the PBM', tag: '1.1 h', kind: 'good', at: 23.6, note: 'MuleSoft submits the approved correction. The request carries an idempotency key.' },
+  { id: 6, lane: 1, x: 81, t: 'Fresh re-read', s: 'Matches CMS, version up', tag: 'Verified in 31 min', kind: 'good', at: 24.1, note: 'The PBM is read again. Only a match on category, effective date and a higher record version marks it Verified.' },
+  { id: 7, lane: 4, x: 81, t: 'Member told, agent briefed', s: 'Notice B, status card', tag: 'Marketing + Service', kind: 'good', at: 24.6, note: 'Notice B goes out after verification, and the service agent sees the status and what to say.' }
+], { status: 'status-a', clock: 'clock-a', play: 'play-a', reset: 'reset-a',
+     fmtClock: h => h.toFixed(1) + ' hours', warn: () => false,
+     end: 'Done in about 25 hours with roughly 35 days of margin, a re-read proving the fix, and the member informed.' });
+
+// ================= stage bars and timelines =================
+function bars(barId, legId, stages) {
+  const total = stages.reduce((a, s) => a + s.hours, 0);
+  const bar = document.getElementById(barId), leg = document.getElementById(legId);
+  stages.forEach(s => {
+    const d = document.createElement('div'); d.style.width = (100 * s.hours / total) + '%'; d.style.background = s.color;
+    d.textContent = s.hours >= 24 ? (s.hours / 24).toFixed(1) + ' d' : (s.hours >= 6 ? s.hours.toFixed(1) + ' h' : ''); bar.appendChild(d);
+    const l = document.createElement('span'); l.innerHTML = '<i style="background:' + s.color + '"></i>' + s.label + ': ' + s.hours + ' h'; leg.appendChild(l);
+  });
+}
+bars('bar-b', 'legend-b', BEFORE.stages);
+bars('bar-a', 'legend-a', AFTER.stages);
+
+(function () {
+  const span = BEFORE.daysLeft + BEFORE.lateMedianDays + 2, pos = d => (100 * d / span) + '%';
+  document.getElementById('tl-b').innerHTML =
+    '<div class="axis"></div><div class="range" style="left:0;width:' + (100 * BEFORE.medianDaysToFix / span) + '%;background:#f3b27a"></div>' +
+    '<div class="mark" style="left:0"><i></i>Detected<br>day 0</div>' +
+    '<div class="mark low" style="left:' + pos(BEFORE.medianDaysToFix) + '"><i style="background:#dd7a01"></i>Median fix<br>day 17.1</div>' +
+    '<div class="mark" style="left:' + pos(BEFORE.daysLeft) + '"><i style="background:#c23934"></i>Effective date<br>day 21</div>' +
+    '<div class="mark low" style="left:' + pos(BEFORE.daysLeft + BEFORE.lateMedianDays) + '"><i style="background:#8e1f1b"></i>Late cases land<br>median +8 days (' + BEFORE.lateShare + ')</div>';
+  const spanA = AFTER.daysLeft + 2, posA = d => (100 * d / spanA) + '%';
+  document.getElementById('tl-a').innerHTML =
+    '<div class="axis"></div><div class="range" style="left:0;width:' + Math.max(1.2, 100 * 1.03 / spanA) + '%;background:#2e844a"></div>' +
+    '<div class="mark" style="left:2%"><i></i>Detected<br>day 0</div>' +
+    '<div class="mark low" style="left:' + posA(1.03) + '"><i style="background:#2e844a"></i>Verified fix<br>day 1 (25 h)</div>' +
+    '<div class="mark" style="left:' + posA(AFTER.daysLeft) + '"><i style="background:#c23934"></i>Effective date<br>day 36</div>';
+})();
+
+// ================= gap cards =================
+const gaps = [
+  { n: 1, t: 'Detection is periodic and by spreadsheet', ev: 'Found with a median 21 days left (10% of cases with 9 days or fewer). Automated: 36 days.', chips: [['Data 360', 'd360'], ['MuleSoft', 'mule']], fix: 'Continuous three-way comparison and rules R1 to R7.' },
+  { n: 2, t: 'Triage wastes effort', ev: '18.7% of cases close with no action; about 15% even when a rule would have caught them.', chips: [['Data 360', 'd360'], ['Agentforce', 'ag']], fix: 'Rules separate real mismatches from BAE and stale CMS data (R5, R7) before a person sees them.' },
+  { n: 3, t: 'Hand-offs by email', ev: '3.0 days to a correction request, 2.5 days waiting for approval, no SLA.', chips: [['Agentforce', 'ag'], ['Approval', 'app']], fix: 'One request, queue, 24-hour SLA and escalation. The requester cannot approve.' },
+  { n: 4, t: "The fix waits in a team's queue", ev: '11.5 days median from approval to applied: the largest single delay.', chips: [['MuleSoft', 'mule']], fix: 'Approved correction submitted to the target system right away, idempotent.' },
+  { n: 5, t: 'Nobody confirms it worked', ev: 'Applied equals verified in every manual case. In our model about 6% of fixes need a retry.', chips: [['MuleSoft', 'mule'], ['Data 360', 'd360']], fix: 'Fresh re-read. Only a match on category, date and record version is Verified.' },
+  { n: 6, t: 'Members find out at the counter', ev: 'No post-fix notice in the manual process (assumption). Calls and complaints when a claim prices wrong.', chips: [['Marketing', 'mc'], ['Service', 'sc'], ['Tableau', 'tab']], fix: 'Notice A and B, a status card for the service agent, and a dashboard for operations.' }
+];
+document.getElementById('gapcards').innerHTML = gaps.map(g =>
+  '<div class="gapcard"><span class="n">Gap ' + g.n + '</span><h3>' + g.t + '</h3><p class="note" style="margin:0 0 6px">' + g.ev + '</p>' +
+  '<div>' + g.chips.map(c => '<span class="chip c-' + c[1] + '">' + c[0] + '</span>').join('') + '</div><p style="margin:6px 0 0;font-size:13px"><b>Closed by:</b> ' + g.fix + '</p></div>').join('');
+
+// ================= population scaling =================
+function scale() {
+  const num = id => Math.max(0, Number(document.getElementById(id).value) || 0);
+  const total = num('in-total'), medicare = total * num('in-medicare') / 100, medicaid = total * num('in-medicaid') / 100, dual = total * num('in-dual') / 100;
+  const medOnly = Math.max(0, medicare - dual), mcdOnly = Math.max(0, medicaid - dual);
+  const lis = dual * num('in-dual-lis') / 100 + medOnly * num('in-med-lis') / 100, cases = lis * RATE.discPerMonth;
+  document.getElementById('out-warn').textContent = dual > Math.min(medicare, medicaid) ? 'Dual % is larger than Medicare % or Medicaid %: check the inputs.' : '';
+  const bar = document.getElementById('popbar'), leg = document.getElementById('poplegend'); bar.innerHTML = ''; leg.innerHTML = '';
+  const unique = medOnly + mcdOnly + dual || 1;
+  [['Medicaid only', mcdOnly, '#9db3c8'], ['Dual (Medicare and Medicaid)', dual, '#0176d3'], ['Medicare only', medOnly, '#032d60']].forEach(([n, v, c]) => {
+    const d = document.createElement('div'); d.style.width = (100 * v / unique) + '%'; d.style.background = c; d.style.minWidth = v ? '2px' : '0'; bar.appendChild(d);
+    const l = document.createElement('span'); l.innerHTML = '<i style="background:' + c + '"></i>' + n + ': ' + fmt(v); leg.appendChild(l);
+  });
+  const lateM = cases * RATE.manualVerifiedShare * RATE.manualLate, lateA = cases * RATE.autoVerifiedShare * RATE.autoLate;
+  const hM = cases * RATE.minManual / 60, hA = cases * RATE.minAuto / 60;
+  const set = (id, v) => { document.getElementById(id).textContent = v; };
+  set('out-lis', fmt(lis)); set('k-cases', fmt(cases)); set('k-late', fmt(lateM)); set('k-waste', fmt(cases * RATE.manualNoAction));
+  set('k-hours', fmt(hM)); set('k-fte', (hM / RATE.hoursPerFte).toFixed(1) + ' FTE');
+  set('o-late-m', fmt(lateM)); set('o-late-a', fmt(lateA));
+  set('o-na-m', fmt(cases * RATE.manualNoAction)); set('o-na-a', fmt(cases * RATE.autoNoAction));
+  set('o-h-m', fmt(hM)); set('o-h-a', fmt(hA));
+  set('o-c-m', '$' + fmt(hM * RATE.costPerHour)); set('o-c-a', '$' + fmt(hA * RATE.costPerHour));
+}
+['in-total', 'in-medicare', 'in-medicaid', 'in-dual', 'in-dual-lis', 'in-med-lis'].forEach(id => { document.getElementById(id).oninput = scale; });
+scale();
+</script>
+</body>
+</html>
